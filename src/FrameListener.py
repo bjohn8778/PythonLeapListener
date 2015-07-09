@@ -16,7 +16,7 @@ class FrameListener(Leap.Listener):
     prevID = 0
     frameList = []
     imageList = []
-    def writeFramesToFile(self):
+    def writeDataToFile(self):
         
         #Use LeapImages as default folder for saving images
         #if it exists make a string that does not exist for new folder
@@ -29,56 +29,71 @@ class FrameListener(Leap.Listener):
         #make dir
         os.mkdir(folderFileString)
         
+        #quote from documentation
+        #"Since processing the frame takes a bit of time, the images 
+        #from the frame will be at least one camera frame behind 
+        #the images obtained from the controller"
+        
+        
         #for all frames in frameList
         with open('frame.data', 'wb') as data_file:
             for frame in self.frameList:
-                #this code assumes that the frames hold onto the images
+                #the commented out code assumes that the frames hold onto the images
                 #as they are added to the list. I suspect this is not true
                 #as the Image object we use has a pointer to the actual
                 #data, which will be long gone by the time we process.
-                #this code might have to be moved to an onImage or onFrame
-                #callback which will make the function take longer. At
-                #the very least the image arrays would be added to a list as well,
-                #and then IO handled at this step since it is expensive.
-                #Might be able to get away only doing one of two images too!
+                #thus, I added an imageList that holds ctype_arrays of
+                #the raw image data for the left camera and will use that instead.
                 
-                #quote from documentation
-                #"Since processing the frame takes a bit of time, the images 
-                #from the frame will be at least one camera frame behind 
-                #the images obtained from the controller"
+#                 #commented out, potentially won't work
+#                 #Grab IR images
+#                 leftImage = frame.imageList[0]
+#                 rightImage = frame.imageList[1]
+#                 
+#                 leftImageArray = self.getArrayFromImage(leftImage)
+#                 rightImageArray = self.getArrayFromImage(rightImage)
+#                 
+#                
+#                 #supposedly unique frame ID, increases by 1 (or 2 in poor lighting)
+#                 #for consecutive frames, can use this for filename
+#                 imageId = frame.id
+#                 
+#                 #write to file
+#                 leftImageFileString = folderFileString + '/' + imageId.__str__() + '_left.png'
+#                 rightImageFileString = folderFileString + '/' +imageId.__str__() + '_right.png'
+#                 
+#                 leftImageArray.save(leftImageFileString)
+#                 rightImageArray.save(rightImageFileString)
+
+
+                #implementation that uses list of image data from left camera
                 
-                #So as far as syncing goes the images and tracking data will
-                #be at least one frame off
+                #one to one relationship of frameList and imageList
+                currIndex = self.frameList.index(frame)
+                #get ctype_array from list and convert to numpy array, then to image.
+                ctype_array = self.imageList[currIndex]
+                numpy_array = numpy.ctypeslib.as_array(ctype_array)
+                imageToSave = Image.fromarray(numpy_array)
                 
-                #Grab IR images
-                leftImage = frame.imageList[0]
-                rightImage = frame.imageList[1]
-                
-                leftImageArray = self.getArrayFromImage(leftImage)
-                rightImageArray = self.getArrayFromImage(rightImage)
-                
-               
                 #supposedly unique frame ID, increases by 1 (or 2 in poor lighting)
                 #for consecutive frames, can use this for filename
                 imageId = frame.id
-                
+                 
                 #write to file
-                leftImageFileString = folderFileString + '/' + imageId.__str__() + '_left.png'
-                rightImageFileString = folderFileString + '/' +imageId.__str__() + '_right.png'
-                
-                leftImageArray.save(leftImageFileString)
-                rightImageArray.save(rightImageFileString)
+                ImageFileString = folderFileString + '/' + imageId.__str__()
+                 
+                imageToSave.save(ImageFileString)
                 
                 
-                #code from LEAP docs for writing to file.
+                #code from LEAP docs for writing frame to file.
                 #writes the size of data black first, then writes the frame data
                 #as of now we cannot extract the image data from these serialized 
                 #frames. This is a problem, so we save them seperately above this.
                 #Real question is can we play this data back?
                 #There is code to de serialize it, and Unity/C# code that
                 #both records and plays while rendering hands. Would be nice to 'see'
-                #the data play in front of you instead just number.
-                #not sure if the serialized data is cross language
+                #the data play in front of you instead of just numbers.
+                #Frames should hold all the hand and finger data we need.
                 serialized_tuple = frame.serialize
                 data = serialized_tuple[0]
                 size = serialized_tuple[1]

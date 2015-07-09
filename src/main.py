@@ -27,6 +27,6 @@ if __name__ == '__main__':
     
     print 'writing data to file, and images'
     #write our huge frame list
-    listener.writeFramesToFile()
+    listener.writeDataToFile()
     
     
