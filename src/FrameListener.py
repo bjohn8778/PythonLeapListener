@@ -6,7 +6,12 @@ Currently also does image frames for use of syncing up with
 the eye tracker video. Hypothetically we don't need the 
 images and could just use a symbol (like two fingers making peace sign)
 to line up video and data stream. This would use much less computing
-to file for analysis
+to file for analysis.
+
+"Since processing the frame takes a bit of time, the images 
+from the frame will be at least one camera frame behind 
+the images obtained from the controller" - From documentation.
+        
 @author: Brendan
 '''
 from main import controller
@@ -29,14 +34,18 @@ class FrameListener(Leap.Listener):
         #make dir
         os.mkdir(folderFileString)
         
-        #quote from documentation
-        #"Since processing the frame takes a bit of time, the images 
-        #from the frame will be at least one camera frame behind 
-        #the images obtained from the controller"
-        
+        #do similar thing with frame.data file
+        initialFrameDataString = 'frame'
+        frameFileString = initialFrameDataString
+        counter = 1
+        while (os.path.exists(frameFileString)):
+            frameFileString = initialFrameDataString + '_' + counter.__str__()
+            counter += 1
+        #add .data to end
+        frameFileString += '.data'
         
         #for all frames in frameList
-        with open('frame.data', 'wb') as data_file:
+        with open(frameFileString, 'wb') as data_file:
             for frame in self.frameList:
                 #the commented out code assumes that the frames hold onto the images
                 #as they are added to the list. I suspect this is not true
@@ -135,9 +144,11 @@ class FrameListener(Leap.Listener):
     #and can be processed later
     def addImage(self,image):
         buffer_ptr = image.data_pointer
+        #define ctype_array (why does multiplication of a ctype with width
+        #give an array automatically? That's cool.
         ctype_array_def = ctypes.c_ubyte * image.width * image.height
 
-        # as ctypes array
+        #Fill array with data using pointer.
         ctype_array = ctype_array_def.from_address(int(buffer_ptr))
         self.imageList.append(ctype_array)
         
@@ -148,7 +159,8 @@ class FrameListener(Leap.Listener):
             print 'frame was dropped'
             #TODO: deal with dropped frames here
             #as they still exist in history
-            #and non consistent frame rate skews data
+            #or ignore them because LEAP has
+            #high frame rate
         frame = controller.frame() #The latest frame
         self.frameList.append(frame)
         self.prevID = frame.id
