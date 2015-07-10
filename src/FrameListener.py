@@ -14,68 +14,50 @@ the images obtained from the controller" - From documentation.
         
 @author: Brendan
 '''
-from main import controller
 
 class FrameListener(Leap.Listener):
     
     prevID = 0
     frameList = []
     imageList = []
-    def writeDataToFile(self):
+    #function that handles writing the frames and images
+    #to file. If no filenames passed in then uses some default naming.
+    #Plan to pass in the folder structure, and also frame data name.
+    #will likely have a folder for each object
+    def writeDataToFile(self,initialFolderFileString = None,initialFrameDataString = None):
         
-        #Use LeapImages as default folder for saving images
-        #if it exists make a string that does not exist for new folder
-        initialFolderFileString = 'LeapImages'
-        folderFileString = initialFolderFileString
-        counter = 1
-        while (os.path.exists(folderFileString)):
-            folderFileString = initialFolderFileString + '_' + counter.__str__()
-            counter += 1
-        #make dir
-        os.mkdir(folderFileString)
+        #check if we passed in a folder structure to use or not
+        if initialFolderFileString is None:
+            initialFolderFileString = 'LeapImages/'
+        
+        #check if we passed in the frame data file name
+        #which could be good/bad, object, subject, etc.
+        if initialFrameDataString is None:
+            initialFrameDataString = 'frame'
+        
+        #establish a folder path to save data, make sure it exists
+        initialFolderFileString
+        if (not os.path.exists(initialFolderFileString)):
+            os.makedirs(initialFolderFileString)
         
         #do similar thing with frame.data file
-        initialFrameDataString = 'frame'
-        frameFileString = initialFrameDataString
+        #if one already exists in folder, use same filename with _# appended
+        frameFileString = initialFolderFileString + initialFrameDataString
         counter = 1
-        while (os.path.exists(frameFileString)):
-            frameFileString = initialFrameDataString + '_' + counter.__str__()
+        while (os.path.exists(frameFileString + '.LeapFrames')):
+            frameFileString = initialFolderFileString + initialFrameDataString + '_' + counter.__str__()
             counter += 1
-        #add .data to end
-        frameFileString += '.data'
+        #the file name without a data type for use in making a folder later
+        imageFileString = frameFileString
         
-        #for all frames in frameList
+        #add .data to end
+        frameFileString += '.LeapFrames'
+        
+        #open or create if it does not exist a data file
+        #that will hold the frame data
         with open(frameFileString, 'wb') as data_file:
+            #for all frames in frameList, this could be a doozy
             for frame in self.frameList:
-                #the commented out code assumes that the frames hold onto the images
-                #as they are added to the list. I suspect this is not true
-                #as the Image object we use has a pointer to the actual
-                #data, which will be long gone by the time we process.
-                #thus, I added an imageList that holds ctype_arrays of
-                #the raw image data for the left camera and will use that instead.
-                
-#                 #commented out, potentially won't work
-#                 #Grab IR images
-#                 leftImage = frame.imageList[0]
-#                 rightImage = frame.imageList[1]
-#                 
-#                 leftImageArray = self.getArrayFromImage(leftImage)
-#                 rightImageArray = self.getArrayFromImage(rightImage)
-#                 
-#                
-#                 #supposedly unique frame ID, increases by 1 (or 2 in poor lighting)
-#                 #for consecutive frames, can use this for filename
-#                 imageId = frame.id
-#                 
-#                 #write to file
-#                 leftImageFileString = folderFileString + '/' + imageId.__str__() + '_left.png'
-#                 rightImageFileString = folderFileString + '/' +imageId.__str__() + '_right.png'
-#                 
-#                 leftImageArray.save(leftImageFileString)
-#                 rightImageArray.save(rightImageFileString)
-
-
-                #implementation that uses list of image data from left camera
                 
                 #one to one relationship of frameList and imageList
                 currIndex = self.frameList.index(frame)
@@ -88,16 +70,30 @@ class FrameListener(Leap.Listener):
                 #for consecutive frames, can use this for filename
                 imageId = frame.id
                  
-                #write to file
-                ImageFileString = folderFileString + '/' + imageId.__str__()
-                 
-                imageToSave.save(ImageFileString)
+                #will use same name as data frames, but make a folder with that name
+                #plus LeapImages
+                saveString = imageFileString + '_LeapImages/'
+                
+                #check existence, and make if no images folder yet
+                if (not os.path.exists(saveString)):
+                    os.makedirs(saveString)
+                    
+                #can now safely add the file portion
+                #to string, as makedirs would have made a 
+                #folder with the filename! File name
+                #is simply the unique id plus filetype
+                saveString = saveString + imageId.__str__() + '.png'
+                
+                
+                
+                #write to file 
+                imageToSave.save(saveString)
                 
                 
                 #code from LEAP docs for writing frame to file.
-                #writes the size of data black first, then writes the frame data
-                #as of now we cannot extract the image data from these serialized 
-                #frames. This is a problem, so we save them seperately above this.
+                #writes the size of data block first, then writes the frame data.
+                #As of now we cannot extract the image data from these serialized 
+                #frames. This is a problem, so we save them separately above this.
                 #Real question is can we play this data back?
                 #There is code to de serialize it, and Unity/C# code that
                 #both records and plays while rendering hands. Would be nice to 'see'
@@ -111,6 +107,15 @@ class FrameListener(Leap.Listener):
                 data_address = data.cast().__long__()
                 data_buffer = (ctypes.c_ubyte * size).from_address(data_address)
                 data_file.write(data_buffer)
+            #end of for all frames in list
+        #end of with open()
+        
+        #clear lists
+        self.clearData()
+    #clear our frame and image lists. 
+    def clearData(self):
+        self.frameList = []
+        self.imageList = []
                 
     #function taken from LEAP docs that
     #converts image data from a LEAP Image
@@ -148,7 +153,7 @@ class FrameListener(Leap.Listener):
         #give an array automatically? That's cool.
         ctype_array_def = ctypes.c_ubyte * image.width * image.height
 
-        #Fill array with data using pointer.
+        #Fill an array with data using pointer.
         ctype_array = ctype_array_def.from_address(int(buffer_ptr))
         self.imageList.append(ctype_array)
         
@@ -160,7 +165,9 @@ class FrameListener(Leap.Listener):
             #TODO: deal with dropped frames here
             #as they still exist in history
             #or ignore them because LEAP has
-            #high frame rate
+            #high frame rate.
+            #Could be the first frame from a new object as well
+            #(old prevId doesn't match)
         frame = controller.frame() #The latest frame
         self.frameList.append(frame)
         self.prevID = frame.id
