@@ -1,4 +1,5 @@
-import Leap,FrameListener
+import Leap
+from FrameListener import FrameListener
 from __builtin__ import int
 #from numpy import *
 
@@ -100,10 +101,18 @@ if __name__ == '__main__':
         #subjectID
         initialFrameDataString += '_' + subjectID
         
+        #start LEAP recording
+        controller.add_listener(listener)
+        
+        #record until key press
+        raw_input('Press enter when done recording.')
+        
         #have listener write to file 
         print 'Writing to file, please wait'
         listener.writeDataToFile(initialFolderFileString,initialFrameDataString)
         print 'Done writing'
         #keep going?
         doLoop = not raw_input('Enter q to quit, or anything else to continue: ') == 'q'
+    #end of while doLoop
+    print 'Program exiting'
     

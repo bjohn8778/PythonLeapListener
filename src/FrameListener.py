@@ -67,27 +67,27 @@ class FrameListener(Leap.Listener):
                 ctype_array = self.imageList[currIndex]
                 numpy_array = numpy.ctypeslib.as_array(ctype_array)
                 imageToSave = Image.fromarray(numpy_array)
-                
+                 
                 #supposedly unique frame ID, increases by 1 (or 2 in poor lighting)
                 #for consecutive frames, can use this for filename
                 imageId = frame.id
-                 
+                  
                 #will use same name as data frames, but make a folder with that name
                 #plus LeapImages
                 saveString = imageFileString + '_LeapImages/'
-                
+                 
                 #check existence, and make if no images folder yet
                 if (not os.path.exists(saveString)):
                     os.makedirs(saveString)
-                    
+                     
                 #can now safely add the file portion
                 #to string, as makedirs would have made a 
                 #folder with the filename! File name
                 #is simply the unique id plus filetype
                 saveString = saveString + imageId.__str__() + '.png'
-                
-                
-                
+                 
+                 
+                 
                 #write to file 
                 imageToSave.save(saveString)
                 
@@ -104,6 +104,7 @@ class FrameListener(Leap.Listener):
                 serialized_tuple = frame.serialize
                 data = serialized_tuple[0]
                 size = serialized_tuple[1]
+
                 data_file.write(struct.pack("i", size))
                 
                 data_address = data.cast().__long__()
