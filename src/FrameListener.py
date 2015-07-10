@@ -24,6 +24,8 @@ class FrameListener(Leap.Listener):
     #to file. If no filenames passed in then uses some default naming.
     #Plan to pass in the folder structure, and also frame data name.
     #will likely have a folder for each object
+    #ASSUMPTIONS: the initialFolderFileString ends with '/' so it's valid directory
+    #             and initiFrameDataStrign does NOT end with '/'
     def writeDataToFile(self,initialFolderFileString = None,initialFrameDataString = None):
         
         #check if we passed in a folder structure to use or not

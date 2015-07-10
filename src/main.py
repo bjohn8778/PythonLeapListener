@@ -87,10 +87,10 @@ if __name__ == '__main__':
         
         #Good or bad
         if isGood:
-            initialFolderFileString = '/Good/'
+            initialFolderFileString = 'Good/'
             initialFrameDataString = 'Good'
         else:
-            initialFolderFileString = '/Bad/'
+            initialFolderFileString = 'Bad/'
             initialFrameDataString = 'Bad'
         
         #objectNumber
