@@ -61,35 +61,37 @@ class FrameListener(Leap.Listener):
             #for all frames in frameList, this could be a doozy
             for frame in self.frameList:
                 
-                #one to one relationship of frameList and imageList
-                currIndex = self.frameList.index(frame)
-                #get ctype_array from list and convert to numpy array, then to image.
-                ctype_array = self.imageList[currIndex]
-                numpy_array = numpy.ctypeslib.as_array(ctype_array)
-                imageToSave = Image.fromarray(numpy_array)
-                 
-                #supposedly unique frame ID, increases by 1 (or 2 in poor lighting)
-                #for consecutive frames, can use this for filename
-                imageId = frame.id
-                  
-                #will use same name as data frames, but make a folder with that name
-                #plus LeapImages
-                saveString = imageFileString + '_LeapImages/'
-                 
-                #check existence, and make if no images folder yet
-                if (not os.path.exists(saveString)):
-                    os.makedirs(saveString)
-                     
-                #can now safely add the file portion
-                #to string, as makedirs would have made a 
-                #folder with the filename! File name
-                #is simply the unique id plus filetype
-                saveString = saveString + imageId.__str__() + '.png'
-                 
-                 
-                 
-                #write to file 
-                imageToSave.save(saveString)
+                #print 'in frame writing loop'
+                
+#                 #one to one relationship of frameList and imageList
+#                 currIndex = self.frameList.index(frame)
+#                 #get ctype_array from list and convert to numpy array, then to image.
+#                 ctype_array = self.imageList[currIndex]
+#                 numpy_array = numpy.ctypeslib.as_array(ctype_array)
+#                 imageToSave = Image.fromarray(numpy_array)
+#                  
+#                 #supposedly unique frame ID, increases by 1 (or 2 in poor lighting)
+#                 #for consecutive frames, can use this for filename
+#                 imageId = frame.id
+#                   
+#                 #will use same name as data frames, but make a folder with that name
+#                 #plus LeapImages
+#                 saveString = imageFileString + '_LeapImages/'
+#                  
+#                 #check existence, and make if no images folder yet
+#                 if (not os.path.exists(saveString)):
+#                     os.makedirs(saveString)
+#                      
+#                 #can now safely add the file portion
+#                 #to string, as makedirs would have made a 
+#                 #folder with the filename! File name
+#                 #is simply the unique id plus filetype
+#                 saveString = saveString + imageId.__str__() + '.png'
+#                  
+#                  
+#                  
+#                 #write to file 
+#                 imageToSave.save(saveString)
                 
                 
                 #code from LEAP docs for writing frame to file.
@@ -137,7 +139,7 @@ class FrameListener(Leap.Listener):
         
     #Simple callback that will
     #add each frame to a list of frames
-    def onFrame(self, controller):
+    def on_frame(self, controller):
         #want to avoid IO here, so
         #we add these things to lists.
         #I'm not worried about frames, but images will likely
@@ -145,7 +147,7 @@ class FrameListener(Leap.Listener):
         self.addFrame(controller)
         
         #add left stereo image data to imageList
-        self.addImage(controller.frame().images[0])
+        #self.addImage(controller.frame().images[0])
         
     #add an image to imageList
     #the image itself is a ctype_array 
@@ -163,7 +165,7 @@ class FrameListener(Leap.Listener):
         
     #function that adds current frame to list
     def addFrame(self,controller):
-        if controller.frame(1).id() != self.prevID:
+        if controller.frame(1).id != self.prevID:
             print 'frame was dropped'
             #TODO: deal with dropped frames here
             #as they still exist in history

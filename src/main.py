@@ -8,7 +8,8 @@ if __name__ == '__main__':
     #test Leap
     controller = Leap.Controller()
     
-    print 'LEAP connected is ' + controller.is_connected.__str__()
+    while (not controller.is_connected):
+        print 'LEAP connected is ' + controller.is_connected.__str__()
     
     #we want tracking data in background
     #other flags are for image grabbing and HMD stuff
@@ -108,7 +109,7 @@ if __name__ == '__main__':
         raw_input('Press enter when done recording.')
         
         #have listener write to file 
-        print 'Writing to file, please wait'
+        print 'Writing ' + initialFrameDataString + '.LeapFrames ' + 'to ' + initialFolderFileString
         listener.writeDataToFile(initialFolderFileString,initialFrameDataString)
         print 'Done writing'
         #keep going?
